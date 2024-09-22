@@ -1,0 +1,66 @@
+#%RAML 1.0
+title: cafe-eapi
+
+
+/customer:
+  /createRecord:
+    post:
+      body:
+        application/json:
+          type: !include /dataTypes/createRecord.raml
+          example: !include /examples/createRecord.json
+      responses:
+        201:
+          body:
+            application/json:
+              example: "record is created"
+  /getRecord:
+    get:
+      queryParameters:
+        phoneNumber: 
+          type: number
+          required: true
+          example: 6754329876
+      responses:
+        200:
+          body:
+            application/json:
+              type: !include /dataTypes/getRecords.raml
+              example: !include /examples/getResponce.json
+  /updateRecord:
+    patch:
+      body:
+        application/json:
+          type: !include /dataTypes/updateRecord.raml
+          example: !include /examples/updateRecord.json
+      responses:
+        200:
+          body:
+            application/json:
+              example: "record updated successfully"
+/healthCheck:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            example: "api is running successfully"
+              
+      
+                
+              
+          
+            
+
+
+                
+
+
+            
+
+                
+            
+      
+            
+          
+      

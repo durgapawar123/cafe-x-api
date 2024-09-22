@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="049896d4-4a3e-4e29-93b0-2aeb699c7ed1" >
+		<http:request-connection host='#[vars.inputParameters."host"]' protocol="HTTPS"/>
+	</http:request-config>
+	<flow name="cafe-x-implementationFlow-getRecord" doc:id="59081d66-d518-4015-846d-df7db2bf1461" >
+		<ee:transform doc:name="Transform Message" doc:id="b2127d97-ed60-47d5-9294-b48835f0081f" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="inputParameters" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"host": Mule::p('cafe-papi.host'),
+	"method": "GET",
+	"path": Mule::p('cafe-papi.getRecordPath'),
+	"port": Mule::p('cafe-papi.port'),
+	"queryParams": if(isEmpty(attributes.queryParams.phoneNumber)) payload.phoneNumber else attributes.queryParams.phoneNumber
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="e401682b-6f2b-4939-b10d-47a0be16fa90" name="cafe-x-implementationSub_Flow"/>
+	</flow>
+	<flow name="cafe-x-implementationFlow-updateRecord" doc:id="765a56ce-7340-474e-9d09-f28574dcc414" >
+		<ee:transform doc:name="Transform Message" doc:id="2e729a59-5b58-48d1-b9d1-89b07f31b4b3" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="inputParameters" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"host": Mule::p('cafe-papi.host'),
+	"method": "PATCH",
+	"path": Mule::p('cafe-papi.updateRecordPath'),
+	"port": Mule::p('cafe-papi.port'),
+	"payload": payload
+	
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="17a84c46-229d-4287-9f9e-760c58aec13b" name="cafe-x-implementationSub_Flow"/>
+	</flow>
+	<flow name="cafe-x-implementationFlow-createRecord" doc:id="c9a83675-afa0-42a5-8440-ebd1cb505e64" >
+		<ee:transform doc:name="Transform Message" doc:id="dee2516b-ce04-4483-91e7-e204addcdce2" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="inputParameters" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"host": Mule::p('cafe-papi.host'),
+	"method": "POST",
+	"path": Mule::p('cafe-papi.createRecordPath'),
+	"port": Mule::p('cafe-papi.port'),
+	"payload": payload
+}
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="c7b27e47-1cd3-4aa5-98e9-6bedd4e3853b" name="cafe-x-implementationSub_Flow"/>
+	</flow>
+	<sub-flow name="cafe-x-implementationSub_Flow" doc:id="635ff035-0bda-41a3-9a55-47e0682ea1e8" >
+		<until-successful maxRetries="3" doc:name="Until Successful" doc:id="ea852ee3-1c62-430b-8caf-27b30c890a71" millisBetweenRetries="30000">
+			<http:request method='#[vars.inputParameters."method"]' doc:name="Request" doc:id="f4616144-71a5-4dd2-85b3-a8d48cde4b64" config-ref="HTTP_Request_configuration" path='#[vars.inputParameters."path"]'>
+			<http:body><![CDATA[#[vars.inputParameters.payload]]]></http:body>
+			<http:query-params><![CDATA[#[{
+	"phoneNumber": vars.inputParameters.queryParams
+}]]]></http:query-params>
+		</http:request>
+		</until-successful>
+		<ee:transform doc:name="Transform Message" doc:id="3469f30a-b9d9-4653-8c17-93147c354393" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>
